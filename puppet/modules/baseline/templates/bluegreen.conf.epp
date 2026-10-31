@@ -1,0 +1,25 @@
+<%- | String $web_root, Integer $blue_port, Integer $green_port, Integer $active_port, String $active_color | -%>
+# Managed by Puppet - manual changes will be reverted
+# Live color: <%= $active_color %>
+
+server {
+    listen <%= $blue_port %>;
+    root <%= $web_root %>/blue;
+    index index.html;
+    location /health { default_type text/plain; return 200 "ok-blue\n"; }
+}
+
+server {
+    listen <%= $green_port %>;
+    root <%= $web_root %>/green;
+    index index.html;
+    location /health { default_type text/plain; return 200 "ok-green\n"; }
+}
+
+# Router: users hit port 80 and are sent to the live color
+server {
+    listen 80 default_server;
+    location / {
+        proxy_pass http://127.0.0.1:<%= $active_port %>;
+    }
+}
