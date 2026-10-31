@@ -1,0 +1,17 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Secrets
+*.pem
+*.key
+.env
+vault_pass*
+*.retry
+
+# Misc
+__pycache__/
+.DS_Store
