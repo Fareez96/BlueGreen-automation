@@ -1,0 +1,39 @@
+---
+- name: Manual rollback to the other color
+  hosts: web
+  become: true
+  vars:
+    puppet_dir: /home/ubuntu/puppet
+  tasks:
+    - name: Read the live color
+      ansible.builtin.command: cat /etc/bluegreen/active_color
+      register: live_raw
+      changed_when: false
+
+    - name: Flip to the other color
+      ansible.builtin.copy:
+        content: "{{ 'green' if (live_raw.stdout | trim) == 'blue' else 'blue' }}\n"
+        dest: /etc/bluegreen/active_color
+        mode: "0644"
+      notify: Reapply Puppet baseline
+
+    - name: Apply the flip now
+      ansible.builtin.meta: flush_handlers
+
+    - name: Verify through the router
+      ansible.builtin.uri:
+        url: "http://127.0.0.1/"
+        return_content: true
+      register: after
+
+    - name: Show result
+      ansible.builtin.debug:
+        msg: "After rollback users see: {{ after.content | trim }}"
+
+  handlers:
+    - name: Reapply Puppet baseline
+      ansible.builtin.command: >
+        /opt/puppetlabs/bin/puppet apply
+        --modulepath={{ puppet_dir }}/modules {{ puppet_dir }}/site.pp
+      environment:
+        FACTERLIB: "{{ puppet_dir }}/modules/baseline/lib/facter"

@@ -1,0 +1,6 @@
+---
+- name: Blue-green release
+  hosts: web
+  become: true
+  roles:
+    - bluegreen

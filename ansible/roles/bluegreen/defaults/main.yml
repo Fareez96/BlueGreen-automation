@@ -1,0 +1,8 @@
+---
+ports:
+  blue: 8081
+  green: 8082
+web_root: /var/www
+app_version: v1
+build_ok: true
+puppet_dir: /home/ubuntu/puppet

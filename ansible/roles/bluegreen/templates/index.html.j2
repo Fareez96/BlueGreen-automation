@@ -1,0 +1,6 @@
+<h1>{{ idle_color | upper }} - {{ app_version }}</h1>
+{% if build_ok | bool %}
+<p>APP_OK</p>
+{% else %}
+<p>ERROR: build failed</p>
+{% endif %}

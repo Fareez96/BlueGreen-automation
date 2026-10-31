@@ -1,0 +1,7 @@
+---
+- name: Reapply Puppet baseline
+  ansible.builtin.command: >
+    /opt/puppetlabs/bin/puppet apply
+    --modulepath={{ puppet_dir }}/modules {{ puppet_dir }}/site.pp
+  environment:
+    FACTERLIB: "{{ puppet_dir }}/modules/baseline/lib/facter"

@@ -1,0 +1,88 @@
+---
+- name: Read the live color
+  ansible.builtin.command: cat /etc/bluegreen/active_color
+  register: live_raw
+  changed_when: false
+  tags: always
+
+- name: Work out live and idle colors (facts)
+  ansible.builtin.set_fact:
+    live_color: "{{ live_raw.stdout | trim }}"
+    idle_color: "{{ 'green' if (live_raw.stdout | trim) == 'blue' else 'blue' }}"
+  tags: always
+
+- name: Show the plan
+  ansible.builtin.debug:
+    msg: "Live: {{ live_color }} | Deploying {{ app_version }} to idle: {{ idle_color }}"
+  tags: always
+
+- name: Blue-green release with automatic rollback
+  block:
+    - name: Deploy the app to the idle color
+      ansible.builtin.template:
+        src: index.html.j2
+        dest: "{{ web_root }}/{{ idle_color }}/index.html"
+        mode: "0644"
+      tags: deploy
+
+    - name: Health check the idle color
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ ports[idle_color] }}/"
+        return_content: true
+      register: health
+      tags: healthcheck
+
+    - name: Abort the release if the app is not healthy
+      ansible.builtin.assert:
+        that:
+          - "'APP_OK' in health.content"
+        fail_msg: "Health check FAILED on {{ idle_color }} - switch aborted"
+        success_msg: "Health check passed on {{ idle_color }}"
+      tags: healthcheck
+
+    - name: Switch traffic to the idle color
+      ansible.builtin.copy:
+        content: "{{ idle_color }}\n"
+        dest: /etc/bluegreen/active_color
+        mode: "0644"
+      notify: Reapply Puppet baseline
+      tags: switch
+
+    - name: Apply the switch now
+      ansible.builtin.meta: flush_handlers
+      tags: switch
+
+    - name: Verify through the router on port 80
+      ansible.builtin.uri:
+        url: "http://127.0.0.1/"
+        return_content: true
+      register: live_check
+      tags: switch
+
+    - name: Confirm what users see
+      ansible.builtin.debug:
+        msg: "Users now see: {{ live_check.content | trim }}"
+      tags: switch
+
+  rescue:
+    - name: Release failed - keep the previous color live
+      ansible.builtin.copy:
+        content: "{{ live_color }}\n"
+        dest: /etc/bluegreen/active_color
+        mode: "0644"
+      notify: Reapply Puppet baseline
+
+    - name: Apply the restore
+      ansible.builtin.meta: flush_handlers
+
+    - name: Report the rollback
+      ansible.builtin.debug:
+        msg: "ROLLBACK: {{ app_version }} failed on {{ idle_color }}. Traffic stays on {{ live_color }}."
+
+  always:
+    - name: Write a deploy log entry
+      ansible.builtin.lineinfile:
+        path: /var/log/bluegreen-deploy.log
+        line: "{{ ansible_date_time.iso8601 }} version={{ app_version }} target={{ idle_color }} live_before={{ live_color }}"
+        create: true
+        mode: "0644"
