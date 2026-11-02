@@ -1,0 +1,15 @@
+#!/bin/bash
+# Custom Nagios plugin: checks the app on a blue/green port
+PORT=$1
+BODY=$(curl -s --max-time 5 "http://127.0.0.1:${PORT}/")
+if [ -z "$BODY" ]; then
+  echo "CRITICAL - no response on port ${PORT}"
+  exit 2
+fi
+if echo "$BODY" | grep -q "APP_OK"; then
+  VER=$(echo "$BODY" | head -1 | sed 's/<[^>]*>//g')
+  echo "OK - ${VER} healthy on port ${PORT}"
+  exit 0
+fi
+echo "CRITICAL - app unhealthy on port ${PORT}"
+exit 2
