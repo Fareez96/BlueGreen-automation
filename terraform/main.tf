@@ -79,4 +79,7 @@ resource "aws_instance" "server" {
     Name    = "${var.project_name}-server"
     Project = "INT333"
   }
+  lifecycle {
+    ignore_changes = [ami]
+  }
 }
