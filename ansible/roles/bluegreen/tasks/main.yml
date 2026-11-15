@@ -61,7 +61,7 @@
 
     - name: Confirm what users see
       ansible.builtin.debug:
-        msg: "Users now see: {{ live_check.content | trim }}"
+        msg: "Users now see: {{ live_check.content | regex_findall('<title>(.*?)</title>') | first }}"
       tags: switch
 
   rescue:

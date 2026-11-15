@@ -1,6 +1,52 @@
-<h1>{{ idle_color | upper }} - {{ app_version }}</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ idle_color | upper }} - {{ app_version }}</title>
+{% set accent = {'v1': '#2563eb', 'v2': '#7c3aed', 'v3': '#dc2626'}.get(app_version, '#2563eb') %}
+{% set env = '#1d4ed8' if idle_color == 'blue' else '#15803d' %}
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;color:#1f2937;background:#f8fafc}
+.env{background:{{ env }};color:#fff;text-align:center;padding:9px;font-size:14px;letter-spacing:1px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:18px 8%;background:#fff;border-bottom:1px solid #e5e7eb}
+nav b{font-size:22px;color:{{ accent }}}
+nav a{margin-left:22px;color:#4b5563;text-decoration:none}
+.hero{padding:80px 8%;text-align:center;background:linear-gradient(135deg,{{ accent }}22,#ffffff)}
+.hero h1{font-size:44px;margin:0 0 12px}
+.hero p{font-size:18px;color:#4b5563;max-width:640px;margin:0 auto 26px}
+.btn{display:inline-block;background:{{ accent }};color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;padding:50px 8%}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px}
+.card h3{margin-top:0;color:{{ accent }}}
+.new{border:2px solid {{ accent }}}
+.tag{background:{{ accent }};color:#fff;font-size:12px;padding:2px 8px;border-radius:10px}
+.err{background:#fee2e2;color:#991b1b;padding:40px 8%;text-align:center;font-weight:600;font-size:20px}
+footer{text-align:center;padding:26px;color:#6b7280;font-size:14px}
+</style>
+</head>
+<body>
+<div class="env">{{ idle_color | upper }} ENVIRONMENT &nbsp;|&nbsp; RELEASE {{ app_version }}</div>
+<nav><b>TaskFlow</b><div><a href="#">Features</a><a href="#">Pricing</a><a href="#">Contact</a></div></nav>
+<section class="hero">
+<h1>Plan work. Ship faster.</h1>
+<p>TaskFlow is a simple task board for small teams.{% if app_version != 'v1' %} Now with dashboards and weekly reports.{% else %} Create boards, add tasks and track progress.{% endif %}</p>
+<a class="btn" href="#">Get started</a>
+</section>
 {% if build_ok | bool %}
-<p>APP_OK</p>
-{% else %}
-<p>ERROR: build failed</p>
+<!-- APP_OK -->
+<div class="grid">
+<div class="card"><h3>Boards</h3><p>Organise tasks in columns and move them as work progresses.</p></div>
+<div class="card"><h3>Teams</h3><p>Invite teammates and assign tasks in one click.</p></div>
+<div class="card"><h3>Reminders</h3><p>Never miss a deadline with simple due-date alerts.</p></div>
+{% if app_version != 'v1' %}
+<div class="card new"><h3>Dashboard <span class="tag">NEW</span></h3><p>See progress at a glance with charts and weekly reports.</p></div>
 {% endif %}
+</div>
+{% else %}
+<div class="err">ERROR: build failed - this release must not go live</div>
+{% endif %}
+<footer>Served from the {{ idle_color | upper }} environment &middot; release {{ app_version }}</footer>
+</body>
+</html>

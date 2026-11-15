@@ -7,7 +7,7 @@ if [ -z "$BODY" ]; then
   exit 2
 fi
 if echo "$BODY" | grep -q "APP_OK"; then
-  VER=$(echo "$BODY" | head -1 | sed 's/<[^>]*>//g')
+  VER=$(echo "$BODY" | sed -n 's:.*<title>\(.*\)</title>.*:\1:p' | head -1)
   echo "OK - ${VER} healthy on port ${PORT}"
   exit 0
 fi

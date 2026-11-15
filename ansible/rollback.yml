@@ -28,7 +28,7 @@
 
     - name: Show result
       ansible.builtin.debug:
-        msg: "After rollback users see: {{ after.content | trim }}"
+        msg: "After rollback users see: {{ after.content | regex_findall('<title>(.*?)</title>') | first }}"
 
   handlers:
     - name: Reapply Puppet baseline
